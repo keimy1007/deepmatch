@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+  
+  // Matches where this user is the initiator
+  initiatedMatches Match[] @relation("UserInitiated")
+  // Matches where this user is the target
+  receivedMatches  Match[] @relation("UserReceived")
+  
+  // Sent messages
+  sentMessages     Message[] @relation("MessageSender")
+  // Received messages
+  receivedMessages Message[] @relation("MessageReceiver")
+  
+  // Likes given by this user
+  likesGiven Like[] @relation("LikeGiver")
+  // Likes received by this user
+  likesReceived Like[] @relation("LikeReceiver")
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  bio         String?
+  age         Int?
+  location    String?
+  interests   String?  // Store as JSON string
+  photos      String?  // Store photo URLs as JSON string
+  preferences Json?    // Store matching preferences as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Match {
+  id          String      @id @default(cuid())
+  user1Id     String
+  user2Id     String
+  status      MatchStatus @default(PENDING)
+  matchedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user1    User      @relation("UserInitiated", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2    User      @relation("UserReceived", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+  @@map("matches")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  giverId   String
+  receiverId String
+  createdAt DateTime @default(now())
+
+  giver    User @relation("LikeGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver User @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([giverId, receiverId])
+  @@map("likes")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  matchId   String
+  senderId  String
+  receiverId String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  match    Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender   User  @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User  @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+enum MatchStatus {
+  PENDING
+  MATCHED
+  DECLINED
+  BLOCKED
+}
