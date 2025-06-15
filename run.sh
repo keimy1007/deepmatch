@@ -47,9 +47,13 @@ npx prisma generate
 echo "  - データベースとテーブルを作成中..."
 npx prisma db push
 
+# 既存のサンプルデータをクリア
+echo "  - 既存データをクリア中..."
+npx prisma db seed --reset 2>/dev/null || true
+
 # サンプルデータ投入
 echo "  - サンプルデータを投入中..."
-npm run db:seed
+npm run db:reset && npm run db:seed
 
 echo "✅ データベースセットアップ完了"
 
@@ -72,6 +76,21 @@ echo "💡 停止するには Ctrl+C を押してください"
 echo ""
 echo "🚀 サーバーを起動しています..."
 echo ""
+
+# ブラウザを自動で開く（Mac/Linux）
+if command -v open &> /dev/null; then
+    # macOS
+    echo "🌐 ブラウザを自動で開いています..."
+    sleep 3 && open http://localhost:3000 &
+elif command -v xdg-open &> /dev/null; then
+    # Linux
+    echo "🌐 ブラウザを自動で開いています..."
+    sleep 3 && xdg-open http://localhost:3000 &
+elif command -v start &> /dev/null; then
+    # Windows
+    echo "🌐 ブラウザを自動で開いています..."
+    sleep 3 && start http://localhost:3000 &
+fi
 
 # 開発サーバー起動
 npm run dev
