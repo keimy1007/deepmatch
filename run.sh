@@ -47,13 +47,9 @@ npx prisma generate
 echo "  - データベースとテーブルを作成中..."
 npx prisma db push
 
-# 既存のサンプルデータをクリア
-echo "  - 既存データをクリア中..."
-npx prisma db seed --reset 2>/dev/null || true
-
-# サンプルデータ投入
-echo "  - サンプルデータを投入中..."
-npm run db:reset && npm run db:seed
+# データベースリセットとサンプルデータ投入
+echo "  - データベースをリセットしてサンプルデータを投入中..."
+npm run db:reset
 
 echo "✅ データベースセットアップ完了"
 

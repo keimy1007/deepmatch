@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart, X, MessageCircle, User, Settings } from 'lucide-react'
+import { Heart, X, MessageCircle, User, LogIn } from 'lucide-react'
 import Link from 'next/link'
 
 interface Profile {
@@ -18,8 +18,14 @@ export default function Home() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
+    // Check if user is logged in
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
     fetchProfiles()
   }, [])
 
@@ -122,16 +128,31 @@ export default function Home() {
             <Heart className="h-8 w-8 text-pink-500" />
             <h1 className="text-2xl font-bold text-gray-800">DeepMatch</h1>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/matches" className="p-2 text-gray-600 hover:text-pink-500 transition-colors">
-              <MessageCircle className="h-6 w-6" />
-            </Link>
-            <button className="p-2 text-gray-600 hover:text-pink-500 transition-colors">
-              <User className="h-6 w-6" />
-            </button>
-            <button className="p-2 text-gray-600 hover:text-pink-500 transition-colors">
-              <Settings className="h-6 w-6" />
-            </button>
+          <div className="flex space-x-2">
+            {user ? (
+              <>
+                <Link href="/matches" className="p-2 text-gray-600 hover:text-pink-500 transition-colors">
+                  <MessageCircle className="h-6 w-6" />
+                </Link>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('user')
+                    setUser(null)
+                  }}
+                  className="p-2 text-gray-600 hover:text-pink-500 transition-colors"
+                >
+                  <User className="h-6 w-6" />
+                </button>
+              </>
+            ) : (
+              <Link 
+                href="/login" 
+                className="flex items-center space-x-1 bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 transition-colors"
+              >
+                <LogIn className="h-4 w-4" />
+                <span className="text-sm">ログイン</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>

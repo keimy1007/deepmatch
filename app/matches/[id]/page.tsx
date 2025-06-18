@@ -31,40 +31,41 @@ interface Match {
   }
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [match, setMatch] = useState<Match | null>(null)
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [matchId, setMatchId] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // デモ用の現在のユーザーID（実際のアプリでは認証から取得）
-  const currentUserId = 'demo-current-user-id'
-
   useEffect(() => {
-    fetchMatch()
-    fetchMessages()
-  }, [params.id])
+    params.then(({ id }) => {
+      setMatchId(id)
+      fetchMatch(id)
+      fetchMessages(id)
+    })
+  }, [params])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
-  const fetchMatch = async () => {
+  const fetchMatch = async (id: string) => {
     try {
       const response = await fetch('/api/matches')
       const matches = await response.json()
-      const currentMatch = matches.find((m: Match) => m.id === params.id)
+      const currentMatch = matches.find((m: Match) => m.id === id)
       setMatch(currentMatch)
     } catch (error) {
       console.error('マッチ取得エラー:', error)
     }
   }
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (id: string) => {
     try {
-      const response = await fetch(`/api/messages?matchId=${params.id}`)
+      const response = await fetch(`/api/messages?matchId=${id}`)
       const data = await response.json()
       setMessages(data)
       setLoading(false)
@@ -90,7 +91,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          matchId: params.id,
+          matchId: matchId,
           senderId,
           receiverId,
           content: newMessage
